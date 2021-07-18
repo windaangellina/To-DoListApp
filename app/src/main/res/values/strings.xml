@@ -23,7 +23,7 @@
     <string name="pref_notify_name">Notification</string>
     <string name="pref_notify_summary">Daily reminder for nearest active task.</string>
     <string name="notify_channel_name">Task Reminder</string>
-    <string name="notify_content">Due in %1$s.</string>
+    <string name="notify_content">Due in</string>
 
     <!-- Filter -->
     <string name="action_filter">filter</string>

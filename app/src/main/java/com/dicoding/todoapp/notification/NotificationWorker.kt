@@ -19,13 +19,12 @@ import com.dicoding.todoapp.data.TaskRepository
 import com.dicoding.todoapp.setting.SettingsActivity
 import com.dicoding.todoapp.ui.detail.DetailTaskActivity
 import com.dicoding.todoapp.ui.list.TaskActivity
-import com.dicoding.todoapp.utils.NOTIFICATION_CHANNEL_ID
-import com.dicoding.todoapp.utils.NOTIFICATION_CHANNEL_ID_NUM
-import com.dicoding.todoapp.utils.TASK_ID
+import com.dicoding.todoapp.utils.*
 
 class NotificationWorker(private val ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
 
     private val channelName = inputData.getString(NOTIFICATION_CHANNEL_ID)
+    private val dueDateLabel = inputData.getString(NOTIFICATION_CONTENT_ID)
 
     private fun getPendingIntent(task: Task): PendingIntent? {
         val intent = Intent(applicationContext, DetailTaskActivity::class.java).apply {
@@ -46,8 +45,8 @@ class NotificationWorker(private val ctx: Context, params: WorkerParameters) : W
     private fun showAlarmNotification(context: Context) {
         // waktu notif diklik, mau buka activity apa
         val task = TaskRepository.getInstance(ctx).getNearestActiveTask()
-        val title = "Your Nearest Task"
-        val message = task.title
+        val title = task.title
+        val message = "$dueDateLabel ${DateConverter.convertMillisToString(task.dueDateMillis)}"
         val notificationIntent = Intent(context, TaskActivity::class.java)
 
         // model task stack jadi kalo ada notif baru, modelnya bakalan numpuk jadi beberapa notif
@@ -55,7 +54,6 @@ class NotificationWorker(private val ctx: Context, params: WorkerParameters) : W
         taskStackBuilder.addParentStack(SettingsActivity::class.java)
         taskStackBuilder.addNextIntent(notificationIntent)
 
-//        val pendingIntent : PendingIntent = taskStackBuilder.getPendingIntent(100, PendingIntent.FLAG_UPDATE_CURRENT)
         val pendingIntent : PendingIntent? = getPendingIntent(task)
         val notificationManagerCompat = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
