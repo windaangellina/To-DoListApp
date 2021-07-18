@@ -1,6 +1,7 @@
 package com.dicoding.todoapp.setting
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceFragmentCompat
@@ -11,6 +12,8 @@ import com.dicoding.todoapp.ui.ViewModelFactory
 import com.dicoding.todoapp.ui.list.TaskViewModel
 import com.dicoding.todoapp.utils.FunctionLibrary
 import com.dicoding.todoapp.utils.reminder.MyWorker
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -24,6 +27,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val factory = ViewModelFactory.getInstance(requireContext())
         taskViewModel = ViewModelProvider(this, factory).get(TaskViewModel::class.java)
+
+
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -33,7 +38,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
         prefNotification?.setOnPreferenceChangeListener { preference, newValue ->
             val channelName = getString(R.string.notify_channel_name)
             //TODO 13 : Schedule and cancel daily reminder using WorkManager with data channelName
-
+            FunctionLibrary.showToast(requireContext(), "Notification set to be $newValue")
+            if(newValue == true){
+                startPeriodicTask()
+            }
+            else{
+                cancelPeriodicTask()
+            }
 
             true
         }
@@ -46,32 +57,38 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun startPeriodicTask() {
-//            binding.textStatus.text = getString(R.string.status)
         val task = taskViewModel.getNearestActiveTask()
-        val data = Data.Builder()
-            .putString(MyWorker.EXTRA_TASK_TITLE, task.title)
-            .build()
+        task.observe(this, {
+            val data = Data.Builder()
+                .putString(MyWorker.EXTRA_TASK_TITLE, it.title)
+                .build()
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+            // ini untuk ngecek network harus aktif
+//            val constraints = Constraints.Builder()
+//                .setRequiredNetworkType(NetworkType.CONNECTED)
+//                .build()
 
-        periodicWorkRequest = PeriodicWorkRequest.Builder(MyWorker::class.java, 1, TimeUnit.DAYS)
-            .setInputData(data)
-            .setConstraints(constraints)
-            .build()
+//            periodicWorkRequest = PeriodicWorkRequest.Builder(MyWorker::class.java, 1, TimeUnit.DAYS)
+//                .setInputData(data)
+//                .setConstraints(constraints)
+//                .build()
 
-        workManager.enqueue(periodicWorkRequest)
-        workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id)
-            .observe(viewLifecycleOwner, { workInfo ->
-                val status = workInfo.state.name
-                FunctionLibrary.showToast(requireContext(), "status : $status")
+            periodicWorkRequest = PeriodicWorkRequest.Builder(MyWorker::class.java, 1, TimeUnit.DAYS)
+                .setInputData(data)
+                .build()
 
-                if (workInfo.state == WorkInfo.State.ENQUEUED) {
-//                    binding.btnCancelTask.isEnabled = true
-                }
-            })
+            workManager.enqueue(periodicWorkRequest)
+            workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id)
+                .observe(viewLifecycleOwner, { workInfo ->
+                    val status = workInfo.state.name
+                    FunctionLibrary.showToast(requireContext(), "status : $status")
+                    if (workInfo.state == WorkInfo.State.ENQUEUED) {
+
+                    }
+                })
+        })
     }
+
     private fun cancelPeriodicTask() {
         workManager.cancelWorkById(periodicWorkRequest.id)
     }

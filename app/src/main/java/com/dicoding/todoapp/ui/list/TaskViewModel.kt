@@ -1,6 +1,5 @@
 package com.dicoding.todoapp.ui.list
 
-import android.content.Context
 import androidx.lifecycle.*
 import androidx.paging.PagedList
 import com.dicoding.todoapp.R
@@ -9,7 +8,6 @@ import com.dicoding.todoapp.data.TaskRepository
 import com.dicoding.todoapp.utils.Event
 import com.dicoding.todoapp.utils.TasksFilterType
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class TaskViewModel(private val taskRepository: TaskRepository) : ViewModel() {
@@ -50,7 +48,7 @@ class TaskViewModel(private val taskRepository: TaskRepository) : ViewModel() {
         return taskRepository.getTaskById(taskId = taskId)
     }
 
-    fun getNearestActiveTask() : Task{
+    fun getNearestActiveTask() : LiveData<Task>{
         return taskRepository.getNearestActiveTask()
     }
 
