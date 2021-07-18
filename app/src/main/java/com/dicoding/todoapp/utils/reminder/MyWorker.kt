@@ -3,27 +3,23 @@ package com.dicoding.todoapp.utils.reminder
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.dicoding.todoapp.R
 import com.dicoding.todoapp.setting.SettingsActivity
-import com.dicoding.todoapp.ui.ViewModelFactory
 import com.dicoding.todoapp.ui.list.TaskActivity
-import com.dicoding.todoapp.ui.list.TaskViewModel
 import com.dicoding.todoapp.utils.NOTIFICATION_CHANNEL_ID
 import com.dicoding.todoapp.utils.NOTIFICATION_CHANNEL_ID_NUM
-import com.dicoding.todoapp.utils.NOTIFICATION_CHANNEL_NAME
 
 class MyWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
     private var taskTitle : String = ""
 
     companion object {
-        private val TAG = MyWorker::class.java.simpleName
         const val EXTRA_TASK_TITLE = "extra-task-title"
     }
 
@@ -64,9 +60,11 @@ class MyWorker(context: Context, workerParams: WorkerParameters) : Worker(contex
         // Untuk android Oreo ke atas perlu menambahkan notification channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             /* Create or update. */
+//            val channelName = context.getString(R.string.notify_channel_name)
+            val channelName = "name"
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                NOTIFICATION_CHANNEL_NAME,
+                channelName,
                 NotificationManager.IMPORTANCE_DEFAULT)
 
             channel.enableVibration(true)

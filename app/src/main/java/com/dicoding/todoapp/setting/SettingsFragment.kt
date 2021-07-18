@@ -12,14 +12,17 @@ import com.dicoding.todoapp.ui.ViewModelFactory
 import com.dicoding.todoapp.ui.list.TaskViewModel
 import com.dicoding.todoapp.utils.FunctionLibrary
 import com.dicoding.todoapp.utils.reminder.MyWorker
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
 class SettingsFragment : PreferenceFragmentCompat() {
     private lateinit var workManager: WorkManager
     private lateinit var periodicWorkRequest: PeriodicWorkRequest
     private lateinit var taskViewModel: TaskViewModel
+
+    companion object{
+        const val TAG = "SettingsFragment"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,16 +39,29 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val prefNotification = findPreference<SwitchPreference>(getString(R.string.pref_key_notify))
         prefNotification?.setOnPreferenceChangeListener { preference, newValue ->
-            val channelName = getString(R.string.notify_channel_name)
             //TODO 13 : Schedule and cancel daily reminder using WorkManager with data channelName
-            FunctionLibrary.showToast(requireContext(), "Notification set to be $newValue")
+            val channelName = getString(R.string.notify_channel_name)
             if(newValue == true){
                 startPeriodicTask()
             }
             else{
-                cancelPeriodicTask()
+                try {
+                    workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id)
+                        .observe(viewLifecycleOwner, { workInfo ->
+                            val status = workInfo.state.name
+                            Log.d(TAG, "WorkManager Status : $status")
+                            if (workInfo.state == WorkInfo.State.ENQUEUED) {
+                                cancelPeriodicTask()
+                                FunctionLibrary.showToast(
+                                    requireContext(),
+                                    "Task reminder has been cancelled"
+                                )
+                            }
+                        })
+                }catch (e: Exception){
+                    Log.e(TAG, "Cancelling Reminder Failed : ${e.message}")
+                }
             }
-
             true
         }
     }
@@ -63,16 +79,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .putString(MyWorker.EXTRA_TASK_TITLE, it.title)
                 .build()
 
-            // ini untuk ngecek network harus aktif
-//            val constraints = Constraints.Builder()
-//                .setRequiredNetworkType(NetworkType.CONNECTED)
-//                .build()
-
-//            periodicWorkRequest = PeriodicWorkRequest.Builder(MyWorker::class.java, 1, TimeUnit.DAYS)
-//                .setInputData(data)
-//                .setConstraints(constraints)
-//                .build()
-
+            // daily task
             periodicWorkRequest = PeriodicWorkRequest.Builder(MyWorker::class.java, 1, TimeUnit.DAYS)
                 .setInputData(data)
                 .build()
@@ -81,15 +88,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
             workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id)
                 .observe(viewLifecycleOwner, { workInfo ->
                     val status = workInfo.state.name
-                    FunctionLibrary.showToast(requireContext(), "status : $status")
+                    Log.d(TAG, "WorkManager Status : $status")
                     if (workInfo.state == WorkInfo.State.ENQUEUED) {
-
+                        Log.d(TAG, "Reminder has been enqueued")
                     }
                 })
         })
     }
 
     private fun cancelPeriodicTask() {
-        workManager.cancelWorkById(periodicWorkRequest.id)
+        try {
+            workManager.cancelWorkById(periodicWorkRequest.id)
+        }catch (e : Exception){
+            Log.e(TAG, "Cancel Periodic Work Failed : ${e.message}")
+        }
     }
 }
