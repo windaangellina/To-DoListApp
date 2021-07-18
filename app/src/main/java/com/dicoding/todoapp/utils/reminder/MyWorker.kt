@@ -60,8 +60,7 @@ class MyWorker(context: Context, workerParams: WorkerParameters) : Worker(contex
         // Untuk android Oreo ke atas perlu menambahkan notification channel
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             /* Create or update. */
-//            val channelName = context.getString(R.string.notify_channel_name)
-            val channelName = "name"
+            val channelName = context.getString(R.string.notify_channel_name)
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 channelName,
