@@ -52,7 +52,8 @@ class AddTaskActivity : AppCompatActivity(), DatePickerFragment.DialogDateListen
                     false
                 )
                 val result = taskViewModel.insertTask(task = newTask)
-                FunctionLibrary.showToast(applicationContext, "Insert result : $result")
+                FunctionLibrary.showToast(applicationContext, "New task has been added")
+                finish()
                 true
             }
             else -> super.onOptionsItemSelected(item)

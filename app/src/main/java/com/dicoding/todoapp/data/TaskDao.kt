@@ -17,7 +17,7 @@ interface TaskDao {
     fun getTaskById(taskId: Int): LiveData<Task>
 
     @Query("select * from $TASK_TABLE_NAME where completed = 0 order by dueDateMillis ASC limit 1")
-    fun getNearestActiveTask(): LiveData<Task>
+    fun getNearestActiveTask(): Task
 
     @Insert
     suspend fun insertTask(task: Task): Long

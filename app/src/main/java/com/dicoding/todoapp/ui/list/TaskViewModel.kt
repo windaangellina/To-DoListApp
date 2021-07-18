@@ -48,7 +48,7 @@ class TaskViewModel(private val taskRepository: TaskRepository) : ViewModel() {
         return taskRepository.getTaskById(taskId = taskId)
     }
 
-    fun getNearestActiveTask() : LiveData<Task>{
+    fun getNearestActiveTask() : Task{
         return taskRepository.getNearestActiveTask()
     }
 

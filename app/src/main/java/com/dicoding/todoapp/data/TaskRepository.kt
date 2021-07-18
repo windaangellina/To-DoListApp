@@ -46,7 +46,7 @@ class TaskRepository(private val tasksDao: TaskDao) {
         return tasksDao.getTaskById(taskId)
     }
 
-    fun getNearestActiveTask(): LiveData<Task> {
+    fun getNearestActiveTask(): Task {
         return tasksDao.getNearestActiveTask()
     }
 

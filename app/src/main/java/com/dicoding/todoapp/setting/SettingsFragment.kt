@@ -6,13 +6,16 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import androidx.work.*
+import androidx.work.Data
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.dicoding.todoapp.R
+import com.dicoding.todoapp.notification.NotificationWorker
 import com.dicoding.todoapp.ui.ViewModelFactory
 import com.dicoding.todoapp.ui.list.TaskViewModel
 import com.dicoding.todoapp.utils.FunctionLibrary
-import com.dicoding.todoapp.utils.reminder.MyWorker
-import java.lang.Exception
+import com.dicoding.todoapp.utils.NOTIFICATION_CHANNEL_ID
 import java.util.concurrent.TimeUnit
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -30,8 +33,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         val factory = ViewModelFactory.getInstance(requireContext())
         taskViewModel = ViewModelProvider(this, factory).get(TaskViewModel::class.java)
-
-
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -40,7 +41,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val prefNotification = findPreference<SwitchPreference>(getString(R.string.pref_key_notify))
         prefNotification?.setOnPreferenceChangeListener { preference, newValue ->
             //TODO 13 : Schedule and cancel daily reminder using WorkManager with data channelName
-            val channelName = getString(R.string.notify_channel_name)
             if(newValue == true){
                 startPeriodicTask()
             }
@@ -73,27 +73,25 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun startPeriodicTask() {
-        val task = taskViewModel.getNearestActiveTask()
-        task.observe(this, {
-            val data = Data.Builder()
-                .putString(MyWorker.EXTRA_TASK_TITLE, it.title)
-                .build()
+        val data = Data.Builder()
+            .putString(NOTIFICATION_CHANNEL_ID, "notification_id_reminder")
+            .build()
 
-            // daily task
-            periodicWorkRequest = PeriodicWorkRequest.Builder(MyWorker::class.java, 1, TimeUnit.DAYS)
-                .setInputData(data)
-                .build()
+        // daily task
+        periodicWorkRequest = PeriodicWorkRequest.Builder(
+            NotificationWorker::class.java,
+            1, TimeUnit.DAYS
+        ).setInputData(data).build()
 
-            workManager.enqueue(periodicWorkRequest)
-            workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id)
-                .observe(viewLifecycleOwner, { workInfo ->
-                    val status = workInfo.state.name
-                    Log.d(TAG, "WorkManager Status : $status")
-                    if (workInfo.state == WorkInfo.State.ENQUEUED) {
-                        Log.d(TAG, "Reminder has been enqueued")
-                    }
-                })
-        })
+        workManager.enqueue(periodicWorkRequest)
+        workManager.getWorkInfoByIdLiveData(periodicWorkRequest.id)
+            .observe(viewLifecycleOwner, { workInfo ->
+                val status = workInfo.state.name
+                Log.d(TAG, "WorkManager Status : $status")
+                if (workInfo.state == WorkInfo.State.ENQUEUED) {
+                    Log.d(TAG, "Reminder has been enqueued")
+                }
+            })
     }
 
     private fun cancelPeriodicTask() {
