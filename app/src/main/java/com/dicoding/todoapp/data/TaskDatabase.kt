@@ -34,7 +34,15 @@ abstract class TaskDatabase : RoomDatabase() {
                     context.applicationContext,
                     TaskDatabase::class.java,
                     "task.db",
-                ).build()
+                ).fallbackToDestructiveMigration().addCallback(object : Callback(){
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        INSTANCE?.let { database ->
+                            Executors.newSingleThreadScheduledExecutor().execute {
+                                fillWithStartingData(context.applicationContext, database.taskDao())
+                            }
+                        }
+                    }
+                }).build()
                 INSTANCE = instance
                 instance
             }

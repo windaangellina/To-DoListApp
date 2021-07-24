@@ -33,14 +33,17 @@ class TaskAdapter(
             //TODO 10 : Display title based on status using TitleTextView
             task.isCompleted -> {
                 //DONE
+                holder.tvTitle.state = TaskTitleView.DONE
                 holder.cbComplete.isChecked = true
             }
             task.dueDateMillis < System.currentTimeMillis() -> {
                 //OVERDUE
+                holder.tvTitle.state = TaskTitleView.OVERDUE
                 holder.cbComplete.isChecked = false
             }
             else -> {
                 //NORMAL
+                holder.tvTitle.state = TaskTitleView.NORMAL
                 holder.cbComplete.isChecked = false
             }
         }
